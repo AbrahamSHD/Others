@@ -1,98 +1,80 @@
 
-## app-routing.module.ts
+## Componente TypeScript
+
+Usaremos el [(ngModel)] para enlazar el valor del input y el evento (ngModelChange) para detectar cambios. Además, capturaremos el evento de la tecla Enter para realizar una búsqueda con el término completo.
 
 ```
-  // app-routing.module.ts
-  import { NgModule } from '@angular/core';
-  import { RouterModule, Routes } from '@angular/router';
-  import { AllSchoolsComponent } from './schools/all-schools/all-schools.component';
-  import { SchoolDetailsComponent } from './schools/school-details/school-details.component';
-
-  const routes: Routes = [
-    { path: 'schools', component: AllSchoolsComponent },
-    { path: 'schools/:nameSchool', component: SchoolDetailsComponent }, // Ruta con parámetro dinámico
-    { path: '', redirectTo: '/schools', pathMatch: 'full' }, // Redirige a 'schools' por defecto
-    { path: '**', redirectTo: '/schools' }, // Manejo de rutas no encontradas
-  ];
-
-  @NgModule({
-    imports: [RouterModule.forRoot(routes)],
-    exports: [RouterModule],
-  })
-  export class AppRoutingModule {}
-
-```
-
-## all-schools.component.html
-
-```
-  <!-- all-schools.component.html -->
-  <ul>
-    <li *ngFor="let school of schools">
-      <a [routerLink]="['/schools', sanitizeName(school.name)]">
-        {{ school.name }}
-      </a>
-    </li>
-  </ul>
-
-```
-
-## all-schools.component.ts
-
-```
-  // all-schools.component.ts
+  
   import { Component } from '@angular/core';
 
   @Component({
-    selector: 'app-all-schools',
-    templateUrl: './all-schools.component.html',
-    styleUrls: ['./all-schools.component.css'],
+    selector: 'app-user-filter',
+    templateUrl: './user-filter.component.html',
+    styleUrls: ['./user-filter.component.css']
   })
-  export class AllSchoolsComponent {
-    schools = [
-      { name: 'Escuela Primaria Nacional', studentAdvisors: [], meetings: [] },
-      { name: 'Instituto Técnico Superior', studentAdvisors: [], meetings: [] },
+  export class UserFilterComponent {
+    users = [
+      { id: 1, name: 'John Doe', userId: 23 },
+      { id: 2, name: 'Jane Smith', userId: 34 },
+      { id: 3, name: 'Alice Johnson', userId: 53 },
+      { id: 4, name: 'Bob Brown', userId: 90 },
     ];
 
-    sanitizeName(name: string): string {
-      return name.trim().toLowerCase().replace(/\s+/g, '-');
+    filterTerm: string = '';
+    filteredUsers = [...this.users]; // Copia inicial para mostrar todos los usuarios.
+
+    onFilterChange(): void {
+      const term = this.filterTerm.toLowerCase();
+      this.filteredUsers = this.users.filter(user => 
+        user.name.toLowerCase().includes(term) || user.userId.toString().includes(term)
+      );
+    }
+
+    onEnter(): void {
+      this.onFilterChange(); // Realiza la búsqueda con el término completo.
     }
   }
 
 ```
 
-## school-details.component.ts
-
-```
-  // school-details.component.ts
-  import { Component, OnInit } from '@angular/core';
-  import { ActivatedRoute } from '@angular/router';
-
-  @Component({
-    selector: 'app-school-details',
-    templateUrl: './school-details.component.html',
-    styleUrls: ['./school-details.component.css'],
-  })
-  export class SchoolDetailsComponent implements OnInit {
-    sanitizedName: string | null = '';
-    originalName: string = '';
-
-    constructor(private route: ActivatedRoute) {}
-
-    ngOnInit(): void {
-      this.sanitizedName = this.route.snapshot.paramMap.get('nameSchool');
-      if (this.sanitizedName) {
-        this.originalName = this.sanitizedName.replace(/-/g, ' ');
-      }
-    }
-  }
+## Plantilla HTML
 
 ```
 
-## school-details.component.html
-```
-  <!-- school-details.component.html -->
-  <h1>Detalles de la Escuela</h1>
-  <p>Nombre de la escuela: {{ originalName }}</p>
+  <div class="search-bar">
+    <input
+      type="text"
+      [(ngModel)]="filterTerm"
+      (ngModelChange)="onFilterChange()"
+      (keydown.enter)="onEnter()"
+      placeholder="Search by name or userId"
+    />
+  </div>
+
+  <div class="user-list">
+    <div *ngFor="let user of filteredUsers" class="user-card">
+      <h3>{{ user.name }}</h3>
+      <p>User ID: {{ user.userId }}</p>
+    </div>
+  </div>
+
 
 ```
+
+## Explicación
+
+    Two-Way Data Binding:
+        Usamos [(ngModel)] para enlazar el valor del input a la variable filterTerm.
+
+    Escucha de Cambios:
+        Usamos (ngModelChange) para llamar al método onFilterChange cada vez que se ingresa o elimina una letra en el input.
+
+    Búsqueda Flexible:
+        En onFilterChange, convertimos el término de búsqueda y los datos relevantes (name y userId) a minúsculas para realizar una búsqueda insensible a mayúsculas/minúsculas.
+        Filtramos el array original con base en si el nombre contiene el término o el userId coincide parcial o totalmente.
+
+    Tecla Enter:
+        Usamos (keydown.enter) para detectar cuando se presiona Enter, invocando la misma lógica de filtrado.
+
+    Renderización Dinámica:
+        Usamos *ngFor para recorrer el array filteredUsers, que se actualiza dinámicamente con los resultados del filtro.
